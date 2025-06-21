@@ -29,5 +29,5 @@ pytest-flask==1.2.0
 python-dateutil==2.8.2
 pytz==2023.3
 
-21  # Production server
-22  gunicorn==21.2.0
+# Production server
+gunicorn==21.2.0
