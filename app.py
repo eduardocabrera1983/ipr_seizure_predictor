@@ -1,5 +1,6 @@
 # app.py - Updated Flask App with USTR Special 301 Integration
 
+import logging
 from flask import Flask, render_template, request, jsonify
 import joblib
 import os
@@ -8,29 +9,62 @@ from country_handler import USTREnhancedCountryHandler  # Import new handler
 
 app = Flask(__name__)
 
+# Essential production configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-in-production')
+app.config['DEBUG'] = False
+
+# Basic logging for production
+if not app.debug:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
+
 # Initialize components
 ipr_predictor = None
 country_handler = USTREnhancedCountryHandler()
 
+# Add health check endpoint (essential for monitoring)
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring"""
+    try:
+        status = {
+            'status': 'healthy',
+            'service': 'ipr-predictor',
+            'model_loaded': ipr_predictor is not None
+        }
+        return status, 200
+    except Exception as e:
+        app.logger.error("Health check failed: %s", str(e))
+        return {'status': 'unhealthy', 'error': str(e)}, 500
+
+# Load the ML model at startup
+# This ensures the model is ready for predictions
 def load_model():
     """Load the trained ML model"""
     global ipr_predictor
-    if os.path.exists('models/ipr_risk_model.pkl'):
+    
+    # Production-safe path handling
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(base_dir, 'models', 'ipr_risk_model.pkl')
+    
+    if os.path.exists(model_path):
         try:
-            model_data = joblib.load('models/ipr_risk_model.pkl')
+            model_data = joblib.load(model_path)
             ipr_predictor = IPRRiskPredictor()
             ipr_predictor.model = model_data['model']
             ipr_predictor.label_encoders = model_data['label_encoders']
             ipr_predictor.feature_columns = model_data['feature_columns']
             ipr_predictor.model_metrics = model_data['metrics']
-            print("✅ Model loaded successfully")
+            app.logger.info("✅ Model loaded successfully")
         except Exception as e:
-            print(f"⚠️ Model loading error: {e}")
-            print("📋 Using simplified prediction model")
+            app.logger.error("⚠️ Model loading error: %s", str(e))
             ipr_predictor = IPRRiskPredictor()  # Use default predictor
     else:
-        print("📋 Model file not found - using default predictor")
+        app.logger.info("📋 Model file not found - using default predictor")
         ipr_predictor = IPRRiskPredictor()  # Use default predictor
+    
 
 @app.route('/')
 def index():
@@ -275,13 +309,29 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
+    # Load model at startup
+    load_model()
+    
+    # Check if running in production
+    if os.environ.get('FLASK_ENV') == 'production':
+        app.logger.info("🚀 Starting in production mode")
+    else:
+        app.logger.info("🔧 Starting in development mode")
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # app.py - Main Flask application for IPR Seizure Risk Prediction with USTR Integration
     # Initialize the application
     print("🚀 Starting IPR Seizure Risk Predictor with USTR Integration...")
     print("📊 Data Sources: USTR Special 301 Report 2024 + OHSS IPR Dataset")
     print("🌍 Countries: 120+ with evidence-based risk scoring")
     
-    # Load ML model
-    load_model()
+# Load model when imported by gunicorn
+load_model()    
     
-    # Start Flask app
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# app.py - Main Flask application for IPR Seizure Risk Prediction with USTR Integration
+# Initialize the application
+print("🚀 Starting IPR Seizure Risk Predictor with USTR Integration...")
+print("📊 Data Sources: USTR Special 301 Report 2024 + OHSS IPR Dataset")
+print("🌍 Countries: 120+ with evidence-based risk scoring")
+    
+
