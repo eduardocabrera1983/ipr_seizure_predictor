@@ -1,1 +1,128 @@
-<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<!-- ==================== templates/index.html ==================== -->
+{% extends "base.html" %}
+
+{% block title %}IPR Seizure Risk Predictor - USTR Enhanced{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="gradient-bg py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-shield-alt"></i> IPR Seizure Risk Predictor
+                    <span class="badge bg-warning text-dark ms-2">USTR Enhanced</span>
+                </h1>
+                <p class="lead mb-4">
+                    <i class="fas fa-government"></i> 
+                    Powered by Official USTR Special 301 Assessment + Machine Learning
+                </p>
+                <p class="mb-4">
+                    Predict intellectual property seizure risks for international shipments using 
+                    official US Trade Representative data and advanced analytics.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('predict') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-calculator"></i> Start Prediction
+                    </a>
+                    <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="methodology-badge mb-2">
+                        <i class="fas fa-government"></i> USTR 2024
+                    </div>
+                    <div class="methodology-badge mb-2">
+                        <i class="fas fa-database"></i> $11.6B Data
+                    </div>
+                    <div class="methodology-badge">
+                        <i class="fas fa-brain"></i> ML Enhanced
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="form-section text-center h-100">
+                <div class="text-primary mb-3" style="font-size: 3rem;">
+                    <i class="fas fa-government"></i>
+                </div>
+                <h4>Official USTR Data</h4>
+                <p>
+                    Integrates the latest US Trade Representative Special 301 Report 
+                    identifying countries with IP enforcement concerns.
+                </p>
+                <div class="mt-3">
+                    <span class="ustr-badge ustr-priority">🚨 Priority Watch</span>
+                    <span class="ustr-badge ustr-watch">⚠️ Watch List</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="form-section text-center h-100">
+                <div class="text-success mb-3" style="font-size: 3rem;">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h4>Historical Analysis</h4>
+                <p>
+                    Analyzes 4,583 real seizure records from 2019-2023, worth $11.6 billion, 
+                    to identify patterns and risk factors.
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-info">4,583 Seizures</span>
+                    <span class="badge bg-success">$11.6B Value</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="form-section text-center h-100">
+                <div class="text-warning mb-3" style="font-size: 3rem;">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h4>Machine Learning</h4>
+                <p>
+                    Combines official assessments with predictive algorithms to provide 
+                    accurate, evidence-based risk scoring.
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-primary">89% Accuracy</span>
+                    <span class="badge bg-warning">Random Forest</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="gradient-bg py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Assess Your Shipment Risk?</h2>
+        <p class="lead mb-4">
+            Get evidence-based risk predictions powered by official government data
+        </p>
+        <a href="{{ url_for('predict') }}" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-rocket"></i> Start Risk Assessment
+        </a>
+    </div>
+</div>
+{% endblock %}
+<!-- End of index.html -->
+ <!-- Footer -->
+{% block footer %}
+<footer class="bg-dark text-light py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 IPR Seizure Risk Predictor. Author: Eduardo Cabrera. All rights reserved.</p>
+        <p class="mb-0">Disclaimer: This tool is for informational purposes only and does not constitute legal advice.</p>
+    </div>
+</footer>
+{% endblock %}

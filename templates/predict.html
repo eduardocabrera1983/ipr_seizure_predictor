@@ -1,0 +1,328 @@
+<!-- ==================== templates/predict.html ==================== -->
+{% extends "base.html" %}
+
+{% block title %}IPR Risk Prediction - USTR Enhanced{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="gradient-bg py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-1">
+                    <i class="fas fa-shield-alt"></i> IPR Seizure Risk Predictor
+                    <span class="badge bg-warning text-dark ms-2">USTR Enhanced</span>
+                </h1>
+                <p class="mb-0">
+                    <i class="fas fa-government"></i> Powered by Official USTR Special 301 Assessment + Machine Learning
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="methodology-badge">
+                    <i class="fas fa-government"></i> USTR 2024
+                </div>
+                <div class="methodology-badge">
+                    <i class="fas fa-database"></i> $11.6B Data
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Display -->
+{% if error %}
+<div class="container mt-3">
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Main Form -->
+<div class="container my-5">
+    <form method="POST" action="{{ url_for('predict') }}" id="predictionForm">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Country Selection -->
+                <div class="form-section">
+                    <h4 class="text-primary mb-3">
+                        <i class="fas fa-globe"></i> Country of Origin
+                        <span class="badge bg-info ms-2">USTR Enhanced</span>
+                    </h4>
+                    
+                    <div class="enhanced-select">
+                        <select name="origin" id="countrySelect" class="form-select form-select-lg" required onchange="updateCountryInfo()">
+                            <option value="">🌍 Select Country of Origin...</option>
+                            
+                            <optgroup label="🚨 USTR Priority Watch List 2024 (Very High Risk)">
+                                {% for country in countries.priority_watch_list %}
+                                <option value="{{ country.name }}" 
+                                        data-category="priority" 
+                                        data-seizures="{{ country.historical.seizures }}" 
+                                        data-value="{{ country.historical.avg_value }}">
+                                    {{ country.flag }} {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="⚠️ USTR Watch List 2024 (High Risk)">
+                                {% for country in countries.watch_list %}
+                                <option value="{{ country.name }}" 
+                                        data-category="watch" 
+                                        data-seizures="{{ country.historical.seizures }}" 
+                                        data-value="{{ country.historical.avg_value }}">
+                                    {{ country.flag }} {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="📊 Countries with Historical Data">
+                                {% for country in countries.historical_data %}
+                                <option value="{{ country.name }}" 
+                                        data-category="historical" 
+                                        data-seizures="{{ country.historical.seizures }}" 
+                                        data-value="{{ country.historical.avg_value }}">
+                                    {{ country.flag }} {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <optgroup label="🤝 Major Trading Partners (Low Risk)">
+                                {% for country in countries.major_partners %}
+                                <option value="{{ country.name }}" 
+                                        data-category="partner" 
+                                        data-seizures="{{ country.historical.seizures }}" 
+                                        data-value="{{ country.historical.avg_value }}">
+                                    {{ country.flag }} {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <!-- Dynamic Country Information Display -->
+                    <div id="countryInfo" class="country-info" style="display: none;">
+                        <div id="countryDetails"></div>
+                    </div>
+                </div>
+
+                <!-- Product & Transportation Form -->
+                <div class="form-section">
+                    <h4 class="text-success mb-3"><i class="fas fa-box"></i> Shipment Details</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Category</label>
+                            <select name="product" id="productSelect" class="form-select" required onchange="updateRiskPreview()">
+                                <option value="">Select Product Type...</option>
+                                <option value="Electronics">📱 Electronics</option>
+                                <option value="Clothing">👕 Clothing</option>
+                                <option value="Jewelry">💎 Jewelry</option>
+                                <option value="Watch">⌚ Watches</option>
+                                <option value="Footwear">👟 Footwear</option>
+                                <option value="Purse/Wallets">👜 Purse/Wallets</option>
+                                <option value="Computer/Computer Parts">💻 Computer/Computer Parts</option>
+                                <option value="Toys">🧸 Toys</option>
+                                <option value="Luggage">🧳 Luggage</option>
+                                <option value="other">❓ Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Product Lines</label>
+                            <input type="number" name="line_count" id="lineCount" class="form-control" 
+                                   placeholder="e.g., 25" min="1" required onchange="updateRiskPreview()">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Transportation Method</label>
+                            <select name="conveyance" id="conveyanceSelect" class="form-select" required onchange="updateRiskPreview()">
+                                <option value="">Select Method...</option>
+                                <option value="Express Consignment">📦 Express Consignment</option>
+                                <option value="Commercial Air">✈️ Commercial Air</option>
+                                <option value="Commercial Vessel">🚢 Commercial Vessel</option>
+                                <option value="Commercial Truck">🚛 Commercial Truck</option>
+                                <option value="Passenger Train">🚆 Passenger Train</option>
+                                <option value="other">❓ Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Declared Value (USD)</label>
+                            <input type="number" name="declared_value" id="declaredValue" class="form-control" 
+                                   placeholder="e.g., 50000" min="1" required onchange="updateRiskPreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-shield-alt"></i> Calculate Enhanced IPR Risk
+                    </button>
+                    <div class="mt-2">
+                        <small class="text-muted">Powered by USTR Special 301 + Machine Learning</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Risk Preview -->
+            <div class="col-lg-4">
+                <div class="risk-preview">
+                    <h5><i class="fas fa-chart-line"></i> Enhanced Risk Preview</h5>
+                    <div id="riskPreview">
+                        <p class="mb-3">Select shipment details to see USTR-enhanced assessment...</p>
+                        
+                        <div class="alert alert-light text-dark">
+                            <h6><i class="fas fa-government"></i> USTR Integration:</h6>
+                            <div class="small">
+                                <div class="mb-2">
+                                    <strong>🚨 Priority Watch List:</strong> Serious IP concerns<br>
+                                    <em>China, India, Russia, Turkey...</em>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>⚠️ Watch List:</strong> Significant IP issues<br>
+                                    <em>Mexico, Vietnam, Philippines...</em>
+                                </div>
+                                <div>
+                                    <strong>✅ No Concerns:</strong> Strong enforcement<br>
+                                    <em>Canada, Germany, Japan...</em>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small>
+                                <i class="fas fa-shield-alt"></i> Official US Assessment<br>
+                                <i class="fas fa-database"></i> 4,583 historical seizures<br>
+                                <i class="fas fa-brain"></i> ML Enhanced
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateCountryInfo() {
+    const select = document.getElementById('countrySelect');
+    const option = select.options[select.selectedIndex];
+    const infoDiv = document.getElementById('countryInfo');
+    const detailsDiv = document.getElementById('countryDetails');
+    
+    if (option.value) {
+        // Use Flask API endpoint to get country information
+        fetch(`/api/country-info/${encodeURIComponent(option.value)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    detailsDiv.innerHTML = data.html;
+                    infoDiv.style.display = 'block';
+                } else {
+                    console.error('Error fetching country info:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    } else {
+        infoDiv.style.display = 'none';
+    }
+    
+    updateRiskPreview();
+}
+
+function updateRiskPreview() {
+    const country = document.getElementById('countrySelect').value;
+    const product = document.getElementById('productSelect').value;
+    const conveyance = document.getElementById('conveyanceSelect').value;
+    const lines = document.getElementById('lineCount').value;
+    const value = document.getElementById('declaredValue').value;
+    
+    if (country && product && conveyance && lines && value) {
+        // Prepare data for API call
+        const shipmentData = {
+            origin: country,
+            product: product,
+            conveyance: conveyance,
+            line_count: parseInt(lines),
+            declared_value: parseFloat(value)
+        };
+        
+        // Call Flask API for live preview
+        fetch('/api/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(shipmentData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const result = data.prediction;
+                const country_assessment = data.country_assessment;
+                
+                let riskColor = '#198754';
+                if (result.risk_score >= 70) riskColor = '#dc3545';
+                else if (result.risk_score >= 50) riskColor = '#fd7e14';
+                else if (result.risk_score >= 25) riskColor = '#ffc107';
+                
+                let ustrBadge = '';
+                if (country_assessment.ustr_assessment.category === 'priority_watch_list') {
+                    ustrBadge = '<span class="ustr-badge ustr-priority">🚨 USTR Priority</span>';
+                } else if (country_assessment.ustr_assessment.category === 'watch_list') {
+                    ustrBadge = '<span class="ustr-badge ustr-watch">⚠️ USTR Watch</span>';
+                } else {
+                    ustrBadge = '<span class="ustr-badge ustr-none">✅ No Concerns</span>';
+                }
+                
+                document.getElementById('riskPreview').innerHTML = `
+                    <div class="text-center mb-3">
+                        <div style="font-size: 2.5rem; color: ${riskColor}; font-weight: bold;">${result.risk_score}%</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${result.risk_category} RISK</div>
+                        <div class="mt-2">${ustrBadge}</div>
+                    </div>
+                    
+                    <div class="alert alert-light text-dark">
+                        <strong>📦 Enhanced Assessment:</strong><br>
+                        <small>
+                            ${country} → ${product}<br>
+                            ${conveyance} • ${lines} lines • $${parseInt(value).toLocaleString()}<br>
+                            <strong>USTR Category:</strong> ${country_assessment.ustr_assessment.category.toUpperCase()}
+                        </small>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small>
+                            <i class="fas fa-info-circle"></i> 
+                            Combines USTR assessment + ML model<br>
+                            <strong>Confidence:</strong> ${country_assessment.confidence}
+                        </small>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+}
+</script>
+{% endblock %}
+<!-- End of templates/predict.html -->
+<!-- Footer -->
+{% block footer %}
+<footer class="bg-dark text-light py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 IPR Seizure Risk Predictor. Author: Eduardo Cabrera. All rights reserved.</p>
+        <p class="mb-0">Disclaimer: This tool is for informational purposes only and does not constitute legal advice.</p>
+    </div>
+</footer>
+{% endblock %}

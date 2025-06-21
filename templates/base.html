@@ -1,0 +1,193 @@
+<!-- ==================== templates/base.html ==================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IPR Seizure Risk Predictor{% endblock %}</title>
+    
+    <!-- External CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e3f2fd;
+        }
+        .country-info {
+            margin-top: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ustr-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin: 3px;
+            border: 2px solid transparent;
+        }
+        .ustr-priority {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            border-color: rgba(255,255,255,0.3);
+        }
+        .ustr-watch {
+            background: linear-gradient(45deg, #f7971e, #ffd200);
+            color: white;
+            border-color: rgba(255,255,255,0.3);
+        }
+        .ustr-positive {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            border-color: rgba(255,255,255,0.3);
+        }
+        .ustr-none {
+            background: linear-gradient(45deg, #a8edea, #fed6e3);
+            color: #333;
+            border-color: rgba(0,0,0,0.1);
+        }
+        .risk-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            margin-top: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .methodology-badge {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin: 5px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .enhanced-select select {
+            border: 2px solid #e3f2fd;
+            border-radius: 10px;
+            padding: 12px 45px 12px 15px;
+            font-size: 1.1em;
+        }
+        .enhanced-select select:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 0 0.2rem rgba(33,150,243,0.25);
+        }
+        .navbar-custom {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .footer-custom {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-shield-alt text-primary"></i>
+                <strong>IPR Predictor</strong>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('predict') }}">
+                            <i class="fas fa-calculator"></i> Predict Risk
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}">
+                            <i class="fas fa-info-circle"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('analytics') }}">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-custom">
+        <div class="container text-center">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        <i class="fas fa-shield-alt"></i>
+                        IPR Seizure Risk Predictor
+                    </p>
+                    <small>Powered by USTR Special 301 + Machine Learning</small>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        <i class="fas fa-database"></i>
+                        Official Government Data
+                    </p>
+                    <small>USTR 2024 + OHSS Dataset 2019-2023</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+<!-- Footer -->
+{% block footer %}
+<footer class="bg-dark text-light py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 IPR Seizure Risk Predictor. Author: Eduardo Cabrera. All rights reserved.</p>
+        <p class="mb-0">Disclaimer: This tool is for informational purposes only and does not constitute legal advice.</p>
+    </div>
+</footer>
+{% endblock %}
+<!-- End of templates/base.html -->
+<!-- ==================== templates/base.html ==================== -->

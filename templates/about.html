@@ -1,0 +1,95 @@
+<!-- ==================== templates/about.html ==================== -->
+{% extends "base.html" %}
+
+{% block title %}About & Methodology - IPR Predictor{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="gradient-bg py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-info-circle"></i> About & Methodology
+                </h1>
+                <p class="lead">
+                    Learn how our USTR-enhanced IPR seizure prediction system works and the data sources behind it.
+                </p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="methodology-badge mb-2">
+                    <i class="fas fa-government"></i> Official Data
+                </div>
+                <div class="methodology-badge mb-2">
+                    <i class="fas fa-brain"></i> Machine Learning
+                </div>
+                <div class="methodology-badge">
+                    <i class="fas fa-shield-alt"></i> 89% Accuracy
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview -->
+<div class="container my-5">
+    <div class="form-section">
+        <h3 class="text-primary mb-4">Project Overview</h3>
+        <p class="lead">
+            The IPR Seizure Risk Predictor is an advanced analytics system that combines official 
+            US Trade Representative data with machine learning to assess intellectual property 
+            seizure risks for international shipments.
+        </p>
+        
+        <p>
+            By integrating the latest USTR Special 301 Report with historical seizure data 
+            spanning 2019-2023, our system provides evidence-based risk assessments that go 
+            beyond regional assumptions to deliver actionable insights for importers, 
+            customs brokers, and trade professionals.
+        </p>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5><i class="fas fa-government text-primary"></i> Official Sources</h5>
+                <ul>
+                    <li>USTR Special 301 Report 2024</li>
+                    <li>OHSS IPR Seizures Dataset</li>
+                    <li>HTS Classification Data</li>
+                    <li>World Bank Governance Indicators</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h5><i class="fas fa-chart-line text-success"></i> Key Metrics</h5>
+                <ul>
+                    <li>{{ methodology.countries_analyzed }}+ countries analyzed</li>
+                    <li>{{ methodology.total_seizures }} seizure records</li>
+                    <li>{{ methodology.total_value }} total seizure value</li>
+                    <li>{{ methodology.accuracy }} prediction accuracy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="gradient-bg py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Try the System?</h2>
+        <p class="lead mb-4">
+            Experience evidence-based IPR risk assessment powered by official government data
+        </p>
+        <a href="{{ url_for('predict') }}" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-calculator"></i> Start Risk Assessment
+        </a>
+    </div>
+</div>
+{% endblock %}
+<!-- Footer -->
+{% block footer %}
+<footer class="bg-dark text-light py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 IPR Seizure Risk Predictor. Author: Eduardo Cabrera. All rights reserved.</p>
+        <p class="mb-0">Disclaimer: This tool is for informational purposes only and does not constitute legal advice.</p>
+    </div>
+</footer>
+{% endblock %}
