@@ -45,7 +45,6 @@ def load_model():
     """Load the trained ML model"""
     global ipr_predictor
     
-    # Production-safe path handling
     base_dir = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(base_dir, 'models', 'ipr_risk_model.pkl')
     
@@ -60,12 +59,28 @@ def load_model():
             app.logger.info("✅ Model loaded successfully")
         except Exception as e:
             app.logger.error("⚠️ Model loading error: %s", str(e))
-            ipr_predictor = IPRRiskPredictor()  # Use default predictor
+            # CREATE TRAINED MODEL if loading fails
+            ipr_predictor = create_fallback_model()
     else:
-        app.logger.info("📋 Model file not found - using default predictor")
-        ipr_predictor = IPRRiskPredictor()  # Use default predictor
-    
+        app.logger.info("📋 Model file not found - creating new model")
+        # CREATE TRAINED MODEL if file doesn't exist
+        ipr_predictor = create_fallback_model()
 
+def create_fallback_model():
+    """Create and train a fallback model"""
+    try:
+        predictor = IPRRiskPredictor()
+        predictor.train_model()  # ✅ Actually train it!
+        predictor.save_model()   # Save for next time
+        app.logger.info("✅ Fallback model trained and saved")
+        return predictor
+    except Exception as e:
+        app.logger.error("❌ Failed to create fallback model: %s", str(e))
+        # Return a predictor that uses rule-based fallback
+        return IPRRiskPredictor()
+    
+# app.py - Main Flask application for IPR Seizure Risk Prediction with USTR Integration
+# Initialize the application
 @app.route('/')
 def index():
     """Home page with project overview"""
@@ -111,47 +126,62 @@ def predict():
 def combine_assessments(country_assessment, ml_result, shipment_data):
     """Combine USTR country assessment with ML model prediction"""
     
-    # Get base ML risk
-    ml_risk = ml_result.get('risk_probability', 0.5)
-    
-    # Get USTR-enhanced country risk (0-100 scale)
-    country_risk_score = country_assessment['final_risk_score']
-    country_risk_multiplier = country_risk_score / 100
-    
-    # Combine with weights: 40% Country + 60% Shipment characteristics
-    combined_risk = (country_risk_multiplier * 0.4) + (ml_risk * 0.6)
-    
-    # Ensure reasonable bounds
-    combined_risk = max(0.05, min(0.95, combined_risk))
-    
-    # Determine final category
-    if combined_risk >= 0.7:
-        risk_category = "CRITICAL"
-        color = "#dc3545"
-    elif combined_risk >= 0.5:
-        risk_category = "HIGH" 
-        color = "#fd7e14"
-    elif combined_risk >= 0.3:
-        risk_category = "MEDIUM"
-        color = "#ffc107"
-    else:
-        risk_category = "LOW"
-        color = "#198754"
-    
-    # Generate enhanced recommendations
-    recommendations = generate_enhanced_recommendations(country_assessment, combined_risk, shipment_data)
-    
-    return {
-        "risk_probability": combined_risk,
-        "risk_score": int(combined_risk * 100),
-        "risk_category": risk_category,
-        "risk_color": color,
-        "recommendations": recommendations,
-        "methodology": "USTR Special 301 + ML Model + Historical Seizures",
-        "ml_base_risk": int(ml_risk * 100),
-        "country_risk_score": country_assessment['final_risk_score'],
-        "confidence": country_assessment['confidence']
-    }
+    try:
+        # Get base ML risk with fallback
+        ml_risk = ml_result.get('risk_probability', 0.5) if ml_result else 0.5
+        
+        # Get USTR-enhanced country risk (0-100 scale) with fallback  
+        country_risk_score = country_assessment.get('final_risk_score', 50) if country_assessment else 50
+        country_risk_multiplier = country_risk_score / 100
+        
+        # Import weights from constants
+        from constants import COUNTRY_WEIGHT, ML_WEIGHT
+        combined_risk = (country_risk_multiplier * COUNTRY_WEIGHT) + (ml_risk * ML_WEIGHT)
+        
+        # Ensure reasonable bounds
+        combined_risk = max(0.05, min(0.95, combined_risk))
+        
+        # Determine final category (THIS WAS MISSING!)
+        if combined_risk >= 0.7:
+            risk_category = "CRITICAL"
+            color = "#dc3545"
+        elif combined_risk >= 0.5:
+            risk_category = "HIGH" 
+            color = "#fd7e14"
+        elif combined_risk >= 0.3:
+            risk_category = "MEDIUM"
+            color = "#ffc107"
+        else:
+            risk_category = "LOW"
+            color = "#198754"
+        
+        # Generate enhanced recommendations
+        recommendations = generate_enhanced_recommendations(country_assessment, combined_risk, shipment_data)
+        
+        return {
+            "risk_probability": combined_risk,
+            "risk_score": int(combined_risk * 100),
+            "risk_category": risk_category,  # ✅ Now uses calculated value
+            "risk_color": color,             # ✅ Now uses calculated value  
+            "recommendations": recommendations,
+            "methodology": "USTR Special 301 + ML Model + Historical Seizures",
+            "ml_base_risk": int(ml_risk * 100),
+            "country_risk_score": country_risk_score,
+            "confidence": country_assessment.get('confidence', 'MEDIUM') if country_assessment else 'LOW'
+        }
+        
+    except Exception as e:
+        app.logger.error(f"Error in combine_assessments: {e}")
+        # Return safe fallback
+        return {
+            "risk_probability": 0.5,
+            "risk_score": 50,
+            "risk_category": "MEDIUM",
+            "risk_color": "#ffc107",
+            "recommendations": ["⚠️ Unable to calculate precise risk - manual review recommended"],
+            "methodology": "Fallback Assessment",
+            "confidence": "LOW"
+        }
 
 def generate_enhanced_recommendations(country_assessment, final_risk, shipment_data):
     """Generate context-aware recommendations based on USTR data"""

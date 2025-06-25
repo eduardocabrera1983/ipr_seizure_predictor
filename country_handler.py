@@ -1,5 +1,4 @@
 # ipr_seizure_predictor/country_handler.py
-# -*- coding: utf-8 -*-
 
 """
 Enhanced Country Handler for IPR Seizure Prediction
