@@ -79,12 +79,12 @@ class IPRRiskPredictor:
             print(f"Available columns: {list(df.columns)}")
             raise ValueError(f"Missing required columns: {missing_cols}")
         
-        # ✅ CREATE CONTINUOUS RISK SCORE TARGET (0-100)
+        # ✅ CONTINUOUS RISK SCORE TARGET (0-100)
         df = self._create_continuous_risk_target(df)
         
         # Prepare data
         X = df[feature_columns].fillna(0)
-        y = df['risk_score_target']  # Use continuous target
+        y = df['risk_score_target']  # continuous target
         
         print(f"✓ Feature matrix shape: {X.shape}")
         print(f"✓ Target statistics: mean={y.mean():.1f}, std={y.std():.1f}, range=[{y.min():.1f}, {y.max():.1f}]")
